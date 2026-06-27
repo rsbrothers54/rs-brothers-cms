@@ -1,0 +1,90 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RS Brothers CMS</title>
+<style>
+body { font-family: Arial; background: #0f0f0f; color: white; margin: 0; }
+.header { background: #ff0000; padding: 20px; text-align: center; }
+.header h1 { margin: 0; font-size: 28px; }
+.container { max-width: 900px; margin: 30px auto; padding: 20px; }
+.card { background: #1a1a1a; border-radius: 10px; padding: 20px; margin: 15px 0; }
+input { width: 100%; padding: 10px; margin: 8px 0; background: #333; border: none; color: white; border-radius: 5px; }
+button { background: #ff0000; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; }
+.msg { padding: 10px; margin: 10px 0; border-radius: 5px; }
+.success { background: #1a5c1a; }
+.error { background: #5c1a1a; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 RS Brothers CMS</h1>
+  <p>YouTube Channel Management System</p>
+</div>
+<div class="container">
+  <div class="card">
+    <h2>Register</h2>
+    <input id="rname" placeholder="Name" />
+    <input id="remail" placeholder="Email" />
+    <input id="rpassword" placeholder="Password" type="password" />
+    <button onclick="register()">Register</button>
+    <div id="rmsg"></div>
+  </div>
+  <div class="card">
+    <h2>Login</h2>
+    <input id="lemail" placeholder="Email" />
+    <input id="lpassword" placeholder="Password" type="password" />
+    <button onclick="login()">Login</button>
+    <div id="lmsg"></div>
+  </div>
+  <div class="card">
+    <h2>Create Channel</h2>
+    <input id="cname" placeholder="Channel Name" />
+    <button onclick="createChannel()">Create Channel</button>
+    <div id="cmsg"></div>
+  </div>
+  <div class="card">
+    <h2>Invite User</h2>
+    <input id="iemail" placeholder="User Email" />
+    <button onclick="invite()">Send Invite</button>
+    <div id="imsg"></div>
+  </div>
+  <div class="card">
+    <h2>All Channels</h2>
+    <button onclick="getChannels()">Refresh Channels</button>
+    <div id="channels"></div>
+  </div>
+</div>
+<script>
+let userId = 1;
+async function register() {
+  const r = await fetch('/api/register', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: document.getElementById('rname').value, email: document.getElementById('remail').value, password: document.getElementById('rpassword').value})});
+  const d = await r.json();
+  document.getElementById('rmsg').innerHTML = '<div class="msg '+(d.error?'error':'success')+'">'+(d.error||'Registered successfully!')+'</div>';
+}
+async function login() {
+  const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: document.getElementById('lemail').value, password: document.getElementById('lpassword').value})});
+  const d = await r.json();
+  if(d.user) userId = d.user.id;
+  document.getElementById('lmsg').innerHTML = '<div class="msg '+(d.error?'error':'success')+'">'+(d.error||'Welcome '+d.user.name+'!')+'</div>';
+}
+async function createChannel() {
+  const r = await fetch('/api/channel', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: document.getElementById('cname').value, userId})});
+  const d = await r.json();
+  document.getElementById('cmsg').innerHTML = '<div class="msg success">Channel created!</div>';
+  getChannels();
+}
+async function invite() {
+  const r = await fetch('/api/invite', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: document.getElementById('iemail').value, channelId: 1})});
+  const d = await r.json();
+  document.getElementById('imsg').innerHTML = '<div class="msg success">'+d.message+'</div>';
+}
+async function getChannels() {
+  const r = await fetch('/api/channels');
+  const d = await r.json();
+  document.getElementById('channels').innerHTML = d.map(c => '<div class="msg success">📺 '+c.name+' | Income: ₹'+c.income+'</div>').join('') || 'No channels yet';
+}
+</script>
+</body>
+</html>
